@@ -5,6 +5,7 @@ const cors = require('cors')
 const app = express()
 
 const initRoutes = require('./src/routers')
+const {dbConnect} = require('./src/configs/dbConnect')
 
 console.log(process.env.URL_CLIENT)
 
@@ -16,9 +17,7 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
-
-
-
+dbConnect()
 initRoutes(app)
 
 const port = process.env.PORT || 8888

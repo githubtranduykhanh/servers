@@ -6,6 +6,8 @@ require('dotenv').config()
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/jwt')
 const UserModel = require('../models/userModel')
 const Validate = require('../ultils/validate')
+const { Number } = require('../ultils/helper')
+const sendMail = require('../ultils/sendMail')
 
 
 const validate = (email, password, confirmPassword) => {
@@ -20,6 +22,56 @@ const isValid = (obj) => {
     // Sử dụng Object.values để lấy tất cả các giá trị trong obj
     return Object.values(obj).every(value => value !== undefined && value !== '');
 };
+
+
+const verification = asyncHandler(async (req,res) => {
+    const {email} = req.body
+
+    if(!email) return res.status(400).json({
+        status:false,
+        mes:'Mising input.'
+    })
+
+    const randomNunber = Number.RandomNumber(0,9,4)
+
+    const html = `<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+  <table align="center" style="background-color: #5669FF;border-radius:8px;padding:20px;max-width:600px;margin:auto">
+    <tr>
+      <td>
+        <h1 style="color: #ffffff; text-align: center;">Code Verification</h1>
+        <h2 style="color: #ffffff; text-align: center;">Hello,</h2>
+        <p style="color: #ffffff; text-align: center;">We have received your request. Below are the random numbers generated:</p>
+        
+        <!-- Bảng chứa các ô số -->
+        <table align="center" style="margin: 20px auto; border-spacing: 10px;">
+          <tr>
+            ${randomNunber?.map(number => `
+              <td style="padding: 5px;">
+                <div style="display: inline-block; width: 40px; height: 40px; background-color: #ffffff; color: #000; font-size: 20px; font-weight: bold; border-radius: 8px; text-align: center; line-height: 40px;">
+                  ${number}
+                </div>
+              </td>
+            `).join('')}
+          </tr>
+        </table>
+        
+        <h4 style="color: #ffffff; text-align: center;">Thank you for using our service!</h4>
+        <h4 style="color: #ffffff; text-align: center;">Best regards,</h4>
+        <h4 style="color: #ffffff; text-align: center;">Support team</h4>
+      </td>
+    </tr>
+  </table>
+</body>`
+
+    const rs = await sendMail(email,html,`Registration Code Event Hub : ${randomNunber?.join(' ')}`)
+
+    return res.status(200).json({
+        status:true,
+        mes:'Verification is successfully',
+        email,
+        numbers:randomNunber
+    })
+})
 
 const register = asyncHandler(async (req, res) => {
     const data = { fullName, email, password, confirmPassword } = req.body
@@ -71,9 +123,6 @@ const register = asyncHandler(async (req, res) => {
         })
     }
 })
-
-
-
 
 const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body
@@ -130,5 +179,6 @@ const login = asyncHandler(async (req, res) => {
 
 module.exports = {
     register,
-    login
+    login,
+    verification
 }

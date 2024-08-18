@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const crypto = require('crypto')
 const uniqid = require('uniqid')
+const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/jwt')
@@ -237,8 +238,11 @@ const ressetPassword = asyncHandler(async (req, res) => {
     const accessToken = generateAccessToken(user._id, role)
     // Tạo refresh token
     const newRefreshToken = generateRefreshToken(user._id)
+    //Hash password
+    const salt = bcrypt.genSaltSync(10)
+    const passwordHash = await bcrypt.hash(newPassword, salt)
     // Lưu refresh token vào database
-    await UserModel.findByIdAndUpdate(user._id, { refreshToken: newRefreshToken, password: newPassword }, { new: true })
+    await UserModel.findByIdAndUpdate(user._id, { refreshToken: newRefreshToken, password: passwordHash }, { new: true })
 
     return res.status(200).json({
         status: true,

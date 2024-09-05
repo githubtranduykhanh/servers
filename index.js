@@ -7,10 +7,8 @@ const app = express()
 const initRoutes = require('./src/routers')
 const {dbConnect} = require('./src/configs/dbConnect')
 
-console.log(process.env.URL_CLIENT)
-
 app.use(cors({
-    origin:process.env.URL_CLIENT,
+    origin:'*' || process.env.URL_CLIENT,
     credentials:true //Lưu cookie trên trình duyệt cùng với cấu hình withCredentials:true axios
 }))
 

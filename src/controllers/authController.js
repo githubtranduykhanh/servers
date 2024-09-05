@@ -125,7 +125,7 @@ const register = asyncHandler(async (req, res) => {
             status: newUser ? true : false,
             mes: newUser ? 'Register is successfully. Please go login :))' : 'Something went wrong',
             data: {
-                id: _id,
+                _id,
                 email,
                 role,
                 fullName,
@@ -175,7 +175,7 @@ const login = asyncHandler(async (req, res) => {
             status: true,
             mes: 'Login is successfully',
             data: {
-                id: _id,
+                _id,
                 email,
                 role,
                 fullName,
@@ -248,7 +248,7 @@ const ressetPassword = asyncHandler(async (req, res) => {
         status: true,
         mes: 'Resset Password is successfully',
         data: {
-            id: _id,
+            _id,
             email,
             role,
             fullName,

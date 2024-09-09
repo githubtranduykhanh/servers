@@ -30,6 +30,36 @@ const getAll = asyncHandler(async (req,res) => {
 })
 
 
+
+
+const postAddNewEvent = asyncHandler(async (req,res) => {
+    const {user} = req
+    const { title, description, location, price, imageUrl, users, caterory, authorId, startAt, endAt, date } = req.body
+    const userFind = await UserModel.findById(user._id)
+    if(!userFind) return res.status(400).json({
+        status: false,
+        mes: 'Invalid credentials!',
+    })
+
+    // Xử lý dữ liệu sự kiện
+    console.log('Title:', title);
+    console.log('Description:', description);
+    console.log('Location:', location);
+    console.log('Price:', price);
+    console.log('Image URL:', imageUrl);
+    console.log('Users:', users);
+    console.log('Caterory:', caterory);
+    console.log('Author ID:', authorId);
+    console.log('Start At:', startAt);
+    console.log('End At:', endAt);
+    console.log('Date:', date);
+    
+    // Trả về phản hồi thành công
+    return res.status(200).json({ status: true, mes: 'Event added successfully!' });
+})
+
+
 module.exports = {
-    getAll
+    getAll,
+    postAddNewEvent
 }

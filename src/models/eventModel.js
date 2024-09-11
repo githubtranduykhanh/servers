@@ -2,6 +2,19 @@
 
 const { default: mongoose } = require('mongoose');
 
+// Định nghĩa Schema cho Location
+const LocationSchema = new mongoose.Schema({
+    address: { type: String, required: true },
+    title: { type: String, required: true }
+}, { _id: false }); // Không tạo _id cho subdocument
+
+// Định nghĩa Schema cho Position
+const PositionSchema = new mongoose.Schema({
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true }
+}, { _id: false }); // Không tạo _id cho subdocument
+
+
 const EventSchema = new mongoose.Schema({
 	title: {
 		type: String,
@@ -10,26 +23,9 @@ const EventSchema = new mongoose.Schema({
 	description: {
 		type: String,
 	},
-	locationTitle: {
-		type: String,
-		required: true,
-	},
-	locationAddress: {
-		type: String,
-		required: true,
-	},
-	position: {
-		type: {
-			lat: {
-				type: Number,
-			},
-			long: {
-				type: Number,
-			},
-		},
-		required: true,
-	},
-	photoUrl: {
+	location: { type: LocationSchema, required: true },  // Sử dụng LocationSchema
+    position: { type: PositionSchema, required: true },  // Sử dụng PositionSchema
+	imageUrl: {
 		type: String,
 	},
 	users: {
@@ -40,11 +36,11 @@ const EventSchema = new mongoose.Schema({
 		required: true,
 	},
 	startAt: {
-		type: Number,
+		type: Date,
 		required: true,
 	},
 	endAt: {
-		type: Number,
+		type: Date,
 		required: true,
 	},
 	price: {
@@ -56,7 +52,7 @@ const EventSchema = new mongoose.Schema({
 		required: true,
 	},
 	date: {
-		type: Number,
+		type: Date,
 		required: true,
 	},
 	followers: {

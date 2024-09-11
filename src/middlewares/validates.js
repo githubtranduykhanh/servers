@@ -38,10 +38,10 @@ const addEventConfigs = {
             body('authorId').isString().withMessage('Author ID must be a string'),
         ]
     },
-    caterory: {
+    categories: {
         checks: [
-            body('caterory').isArray().withMessage('Caterory must be an array'),
-            body('caterory.*').isString().withMessage('Each caterory must be a string')
+            body('categories').isArray().withMessage('Categories must be an array'),
+            body('categories.*').isString().withMessage('Each Categories must be a string')
         ]
     },
     date: {
@@ -71,6 +71,13 @@ const addEventConfigs = {
             body('location.title').isString().withMessage('Location title must be a string')
         ]
     },
+    position: {
+        checks: [
+            body('position').isObject().withMessage('Position must be an object'),
+            body('position.lat').isNumeric().withMessage('Position lat must be a number'),
+            body('position.lng').isNumeric().withMessage('Position lng must be a number')
+        ]
+    },
     price: {
         checks: [
             body('price').isNumeric().withMessage('Price must be a number'),
@@ -86,6 +93,18 @@ const addEventConfigs = {
         checks: [
             body('title').notEmpty().withMessage('Title is required'),
             body('title').isString().withMessage('Title must be a string')
+        ]
+    },
+    // Kiểm tra startAt nhỏ hơn endAt
+    customChecks: {
+        checks: [
+            body('startAt').custom((startAt, { req }) => {
+                const endAt = req.body.endAt;
+                if (new Date(startAt) >= new Date(endAt)) {
+                    throw new Error('StartAt must be earlier than EndAt');
+                }
+                return true;
+            })
         ]
     },
    /*  users: {

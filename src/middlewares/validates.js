@@ -1,13 +1,24 @@
-const { body, validationResult } = require('express-validator');
+const { body, validationResult,param,query } = require('express-validator');
 
 // Hàm validates nhận vào một đối tượng cấu hình các trường cần kiểm tra và thông báo lỗi
-const validates = (fieldConfigs) => [
+const validates = (fieldConfigs, source = 'body') => [
      // Tạo các kiểm tra cho từng trường cần thiết dựa trên cấu hình
      ...Object.entries(fieldConfigs).map(([field, { checks }]) => {
         let validatorChain = body(field);
+        switch (source) {
+            case 'params':
+                validatorChain = param(field)
+                break;
+            case 'query':
+                    validatorChain = query(field)
+                break;
+            default:
+                validatorChain = body(field)
+                break;
+        }
         checks.forEach(check => {
-            validatorChain = validatorChain.custom(async (value) => {
-                const result = await check.run({ body: { [field]: value } });
+            validatorChain = validatorChain.custom(async  (value, { req }) => {
+                const result = await check.run({ [source]: { [field]: value } });
                 if (!result.isEmpty()) {
                     throw new Error(result.errors[0].msg); // Lấy thông báo lỗi từ kiểm tra
                 }
@@ -31,8 +42,28 @@ const validates = (fieldConfigs) => [
     }
 ];
 
+
+const distanceEventConfigsQuery = {
+    lat: {
+        checks: [
+            query('lat').isNumeric().withMessage('lat must be a number'),
+        ]
+    },
+    lng: {
+        checks: [
+            query('lng').isNumeric().withMessage('lng must be a number'),
+        ]
+    },
+    distance: {
+        checks: [
+            query('distance').isNumeric().withMessage('distance must be a number'),
+        ]
+    }
+};
+
+
 // Cấu hình các trường cần kiểm tra và các hàm kiểm tra
-const addEventConfigs = {
+const addEventConfigsBody = {
     authorId: {
         checks: [
             body('authorId').isString().withMessage('Author ID must be a string'),
@@ -119,5 +150,6 @@ const addEventConfigs = {
 
 module.exports = {
     validates,
-    addEventConfigs
+    addEventConfigsBody,
+    distanceEventConfigsQuery
 };

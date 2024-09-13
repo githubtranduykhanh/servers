@@ -9,7 +9,7 @@ const {EventModel,UserModel} = require('../models')
 const Validate = require('../ultils/validate')
 const { Number } = require('../ultils/helper')
 const sendMail = require('../ultils/sendMail')
-
+const calculateDistance = require('../ultils/distanceUtils')
 
 const postAddNewEvent = asyncHandler(async (req,res) => {
     const {user} = req
@@ -19,22 +19,6 @@ const postAddNewEvent = asyncHandler(async (req,res) => {
         status: false,
         mes: 'Invalid credentials!',
     })
-
-    // Xử lý dữ liệu sự kiện
-    console.log('Title:', title);
-    console.log('Description:', description);
-    console.log('Location:', location);
-    console.log('Position:', position);
-    console.log('Price:', price);
-    console.log('Image URL:', imageUrl);
-    console.log('Users:', users);
-    console.log('Categories:', categories);
-    console.log('Author ID:', authorId);
-    console.log('Start At:', startAt);
-    console.log('End At:', endAt);
-    console.log('Date:', date);
-    
-
     const newEvent = await EventModel.create({
         title,
         description,
@@ -49,9 +33,6 @@ const postAddNewEvent = asyncHandler(async (req,res) => {
         endAt,
         date
     });
-
-    console.log('Event created:', newEvent);
-
     // Trả về phản hồi thành công
     return res.status(newEvent ? 201 : 500).json({
         status: newEvent ?  true : false,
@@ -60,6 +41,29 @@ const postAddNewEvent = asyncHandler(async (req,res) => {
 })
 
 
+
+
+const getEventsByDistance = asyncHandler(async (req,res) => {
+    const {lat,lng,distance} = req.query
+    const events = await EventModel.find()
+
+    const filteredEvents = events.filter(event => {
+        const eventLat = event.position.lat
+        const eventLng = event.position.lng
+  
+        const eventDistance = calculateDistance(lat, lng, eventLat, eventLng)
+        return eventDistance <= distance // Chỉ giữ các sự kiện trong khoảng cách
+    })
+
+    return res.status(filteredEvents ? 200 : 400).json({
+        status: filteredEvents ? true : false ,
+        mes: filteredEvents ? 'Events By Distance successfully!' : 'Error Events By Distance!',
+        data: filteredEvents ?? []
+    });
+})
+
+
 module.exports = {
-    postAddNewEvent
+    postAddNewEvent,
+    getEventsByDistance
 }

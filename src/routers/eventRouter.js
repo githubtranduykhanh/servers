@@ -7,7 +7,7 @@ const {validates,addEventConfigsBody,distanceEventConfigsQuery} = require('../mi
 
 router.post('/add-new',[verifyAccessToken,...validates(addEventConfigsBody)], eventController.postAddNewEvent)
 router.get('/by-distance',...validates(distanceEventConfigsQuery,'query'), eventController.getEventsByDistance)
-
+router.get('/', eventController.getEvents)
 
 
 module.exports = router

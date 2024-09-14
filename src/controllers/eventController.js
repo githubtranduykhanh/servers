@@ -14,7 +14,7 @@ const { Number } = require("../ultils/helper");
 const sendMail = require("../ultils/sendMail");
 const calculateDistance = require("../ultils/distanceUtils");
 const buildQuery = require("../ultils/buildQuery");
-
+const {checkUser} = require('../middlewares/validates')
 const postAddNewEvent = asyncHandler(async (req, res) => {
   const { user } = req;
   const {
@@ -118,7 +118,6 @@ const eventFilters = (formateQueries, queryObj) => {
 const getEvents = asyncHandler(async (req, res) => {
     console.log(req.query)
     const { lat, lng, distance, ...query } = req.query;
-    console.log({...query})
     const result = await buildQuery(EventModel,{...query},eventFilters)
     // Return response
     if(lat && lng && distance){
@@ -130,16 +129,49 @@ const getEvents = asyncHandler(async (req, res) => {
             return eventDistance <= distance; // Chỉ giữ các sự kiện trong khoảng cách
         });
     }
-    console.log(req.query)
+    
     res.status(result ? 200 : 404).json({
         status: result ? true : false,
-        message: result ? `Get events successfully` : `Cannot get events`,
+        mes: result ? `Get events successfully` : `Cannot get events`,
        ...result
     })
 });
+
+const putFollowers = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  const idEvent = req.params.idEvent;
+  const user = await checkUser(_id)
+  if(!user) return res.status(401).json({
+    status: false,
+    mes: 'Invalid credentials!',
+  })
+  const event = await EventModel.findById(idEvent)
+  if(!event) return res.status(400).json({
+    status: false,
+    mes: 'Event not found!',
+  })
+
+  // Kiểm tra nếu người dùng đã có trong mảng followers
+  const alreadyFollowing = event.followers.includes(user._id);
+
+  // Cập nhật sự kiện
+  const result = await EventModel.findByIdAndUpdate(
+    idEvent,
+    alreadyFollowing ? { $pull: { followers: user._id } } : { $push: { followers: user._id } },
+    { new: true } // Trả về tài liệu đã cập nhật
+  );
+  
+  res.status(result ? 200 : 400).json({
+    status: result ? true : false,
+    mes:  result ? `Put Followers successfully` : 'Put Followers failed',
+    data: result.followers
+  })
+})
+
 
 module.exports = {
   postAddNewEvent,
   getEventsByDistance,
   getEvents,
+  putFollowers,
 };

@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken')
 const asyncHandler = require('express-async-handler')
+
+
 require('dotenv').config()
 const verifyAccessToken = asyncHandler(async (req, res, next) => {
     // Bearer token
@@ -34,7 +36,9 @@ const isAdmin = asyncHandler((req, res, next) => {
     next()
 })
 
+
+
 module.exports = {
     verifyAccessToken,
-    isAdmin
+    isAdmin,
 }

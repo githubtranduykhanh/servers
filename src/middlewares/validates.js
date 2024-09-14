@@ -1,5 +1,6 @@
 const { body, validationResult,param,query } = require('express-validator');
-
+const {UserModel} = require('../models')
+const asyncHandler = require('express-async-handler')
 // Hàm validates nhận vào một đối tượng cấu hình các trường cần kiểm tra và thông báo lỗi
 const validates = (fieldConfigs, source = 'body') => [
      // Tạo các kiểm tra cho từng trường cần thiết dựa trên cấu hình
@@ -59,6 +60,16 @@ const distanceEventConfigsQuery = {
             query('distance').isNumeric().withMessage('distance must be a number'),
         ]
     }
+};
+
+
+
+const followersEventConfigsParams = {
+    idEvent: {
+        checks: [
+            param('idEvent').isString().withMessage('idEvent must be a string'),
+        ]
+    },
 };
 
 
@@ -146,10 +157,15 @@ const addEventConfigsBody = {
     } */
 };
 
-
+const checkUser = asyncHandler( async (idUser) => {
+    const userFind = await UserModel.findById(idUser)
+    return userFind
+})
 
 module.exports = {
     validates,
     addEventConfigsBody,
-    distanceEventConfigsQuery
+    distanceEventConfigsQuery,
+    followersEventConfigsParams,
+    checkUser
 };

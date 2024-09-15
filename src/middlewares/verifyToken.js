@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 const asyncHandler = require('express-async-handler')
-
+const {UserModel} = require('../models')
 
 require('dotenv').config()
 const verifyAccessToken = asyncHandler(async (req, res, next) => {
@@ -37,8 +37,21 @@ const isAdmin = asyncHandler((req, res, next) => {
 })
 
 
+const checkUserDatabase = asyncHandler( async (req, res, next) => {
+    const { _id } = req.user
+
+    const userFind = await UserModel.findById(_id)
+
+    if(!userFind) return res.status(401).json({
+        status: false,
+        mes: 'Invalid credentials!',
+    })
+    next()
+})
+
 
 module.exports = {
     verifyAccessToken,
     isAdmin,
+    checkUserDatabase,
 }

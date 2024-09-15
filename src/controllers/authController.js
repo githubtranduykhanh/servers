@@ -112,6 +112,7 @@ const register = asyncHandler(async (req, res) => {
             photoUrl,
             fullName,
             email,
+            followers,
             ...userData
         } = newUser.toObject()
 
@@ -130,6 +131,7 @@ const register = asyncHandler(async (req, res) => {
                 role,
                 fullName,
                 photoUrl,
+                followers,
                 accessToken,
             }
         })
@@ -160,6 +162,7 @@ const login = asyncHandler(async (req, res) => {
             _id,
             photoUrl,
             fullName,
+            followers,
             email,
             ...userData
         } = user.toObject()
@@ -180,6 +183,7 @@ const login = asyncHandler(async (req, res) => {
                 role,
                 fullName,
                 photoUrl,
+                followers,
                 accessToken,
             }
         })
@@ -222,6 +226,7 @@ const ressetPassword = asyncHandler(async (req, res) => {
         _id,
         photoUrl,
         fullName,
+        followers,
         passwordResetToken,
         ...userData
     } = user.toObject()
@@ -253,6 +258,7 @@ const ressetPassword = asyncHandler(async (req, res) => {
             role,
             fullName,
             photoUrl,
+            followers,
             accessToken,
         }
     })

@@ -137,41 +137,21 @@ const getEvents = asyncHandler(async (req, res) => {
     })
 });
 
-const putFollowers = asyncHandler(async (req, res) => {
+
+
+const getFollowersUser = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const idEvent = req.params.idEvent;
-  const user = await checkUser(_id)
-  if(!user) return res.status(401).json({
-    status: false,
-    mes: 'Invalid credentials!',
-  })
-  const event = await EventModel.findById(idEvent)
-  if(!event) return res.status(400).json({
-    status: false,
-    mes: 'Event not found!',
-  })
-
-  // Kiểm tra nếu người dùng đã có trong mảng followers
-  const alreadyFollowing = event.followers.includes(user._id);
-
-  // Cập nhật sự kiện
-  const result = await EventModel.findByIdAndUpdate(
-    idEvent,
-    alreadyFollowing ? { $pull: { followers: user._id } } : { $push: { followers: user._id } },
-    { new: true } // Trả về tài liệu đã cập nhật
-  );
-  
-  res.status(result ? 200 : 400).json({
-    status: result ? true : false,
-    mes:  result ? `Put Followers successfully` : 'Put Followers failed',
-    data: result.followers
+  const events = await EventModel.find({ followers: _id }).select('_id').exec(); 
+  const eventIds = events.map(event => event._id.toString());
+  res.status(eventIds ? 200 : 400).json({
+    status: eventIds ? true : false,
+    mes:  eventIds ? `Get Followers User successfully` : 'Get Followers User failed',
+    data: eventIds
   })
 })
-
 
 module.exports = {
   postAddNewEvent,
   getEventsByDistance,
   getEvents,
-  putFollowers,
 };

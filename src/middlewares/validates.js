@@ -73,6 +73,25 @@ const followersEventConfigsParams = {
 };
 
 
+const profileUserConfigsParams = {
+    idUser: {
+        checks: [
+            param('idUser').isString().withMessage('idUser must be a string'),
+        ]
+    },
+};
+
+
+
+const expoPushTokenUserConfigsBody = {
+    expoPushToken: {
+        checks: [
+            body('expoPushToken').isString().withMessage('expoPushToken must be a string'),
+        ]
+    },
+};
+
+
 // Cấu hình các trường cần kiểm tra và các hàm kiểm tra
 const addEventConfigsBody = {
     authorId: {
@@ -167,5 +186,7 @@ module.exports = {
     addEventConfigsBody,
     distanceEventConfigsQuery,
     followersEventConfigsParams,
-    checkUser
+    checkUser,
+    expoPushTokenUserConfigsBody,
+    profileUserConfigsParams
 };

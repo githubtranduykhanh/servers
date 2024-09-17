@@ -15,6 +15,9 @@ const sendMail = require("../ultils/sendMail");
 const calculateDistance = require("../ultils/distanceUtils");
 const buildQuery = require("../ultils/buildQuery");
 const {checkUser} = require('../middlewares/validates')
+
+const sendPushNotification = require('../ultils/notification')
+
 const postAddNewEvent = asyncHandler(async (req, res) => {
   const { user } = req;
   const {
@@ -148,6 +151,38 @@ const getFollowersUser = asyncHandler(async (req, res) => {
     mes:  eventIds ? `Get Followers User successfully` : 'Get Followers User failed',
     data: eventIds
   })
+})
+
+
+const sendInviteNotification = asyncHandler(async (req, res) => {
+  const {userIds, messageTitle, messageBody } = req.body
+
+  const users = await UserModel.find({ _id: { $in: userIds } });
+  
+  if (users.length === 0) {
+    return res.status(404).json({
+      status: false,
+      mes: 'No users found!',
+    });
+  }
+
+  const notificationPromises = users.map(user => {
+    if (user.expoPushToken) {
+      return sendPushNotification(user.expoPushToken, messageTitle, messageBody);
+    }
+    return null;
+  });
+
+  // Loại bỏ những lời hứa không hợp lệ và đợi cho tất cả hoàn thành
+  await Promise.all(notificationPromises.filter(promise => promise !== null));
+
+
+  // Gửi phản hồi thành công
+  return res.status(200).json({
+    status: true,
+    mes: 'Notifications sent successfully!',
+  });
+  
 })
 
 module.exports = {

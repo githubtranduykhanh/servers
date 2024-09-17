@@ -9,7 +9,7 @@ const UserModel = require('../models/userModel')
 const Validate = require('../ultils/validate')
 const { Number } = require('../ultils/helper')
 const sendMail = require('../ultils/sendMail')
-
+const {encrypt,decrypt,secretKeyRessetPassword} = require('../ultils/cryptoUtils')
 
 const validate = (email, password, confirmPassword) => {
     const errors = {}
@@ -40,7 +40,10 @@ const sendCodeEmail = asyncHandler(async (req, res) => {
             status: false,
             mes: 'Invalid credentials.'
         })
-        await UserModel.findByIdAndUpdate(user._id, { passwordResetToken: randomNunber.join('') }, { new: true })
+        // await UserModel.findByIdAndUpdate(user._id, { passwordResetToken: randomNunber.join('') }, { new: true })
+        const {iv,encryptedData} = encrypt(randomNunber.join(''), secretKeyRessetPassword)
+        user.createPasswordChangedToken(encryptedData,iv)
+        await user.save()
     }
 
 
@@ -112,7 +115,7 @@ const register = asyncHandler(async (req, res) => {
             photoUrl,
             fullName,
             email,
-            followers,
+            expoPushToken,
             ...userData
         } = newUser.toObject()
 
@@ -131,7 +134,7 @@ const register = asyncHandler(async (req, res) => {
                 role,
                 fullName,
                 photoUrl,
-                followers,
+                expoPushToken,
                 accessToken,
             }
         })
@@ -162,7 +165,7 @@ const login = asyncHandler(async (req, res) => {
             _id,
             photoUrl,
             fullName,
-            followers,
+            expoPushToken,
             email,
             ...userData
         } = user.toObject()
@@ -183,7 +186,7 @@ const login = asyncHandler(async (req, res) => {
                 role,
                 fullName,
                 photoUrl,
-                followers,
+                expoPushToken,
                 accessToken,
             }
         })
@@ -214,7 +217,7 @@ const ressetPassword = asyncHandler(async (req, res) => {
         errors
     })
 
-    const user = await UserModel.findOne({ email })
+    const user = await UserModel.findOne({ email, 'passwordReset.passwordResetExpires': { $gt: Date.now() } })
 
     if (!user) return res.status(400).json({
         status: false,
@@ -226,13 +229,12 @@ const ressetPassword = asyncHandler(async (req, res) => {
         _id,
         photoUrl,
         fullName,
-        followers,
-        passwordResetToken,
+        expoPushToken,
+        passwordReset,
         ...userData
     } = user.toObject()
-
-    console.log(passwordResetToken)
-    const arrPasswordResetToken = passwordResetToken.split('').map((val => +val))
+    const passwordResetTokenHash = decrypt(passwordReset.passwordResetToken,secretKeyRessetPassword,passwordReset.passwordResetIV)
+    const arrPasswordResetToken = passwordResetTokenHash.split('').map((val => +val))
     if (!codes?.every((code, index) => code === arrPasswordResetToken[index]))
         return res.status(400).json({
             status: false,
@@ -247,7 +249,16 @@ const ressetPassword = asyncHandler(async (req, res) => {
     const salt = bcrypt.genSaltSync(10)
     const passwordHash = await bcrypt.hash(newPassword, salt)
     // Lưu refresh token vào database
-    await UserModel.findByIdAndUpdate(user._id, { refreshToken: newRefreshToken, password: passwordHash }, { new: true })
+    await UserModel.findByIdAndUpdate(user._id, { 
+        refreshToken: newRefreshToken,
+        password: passwordHash,
+        passwordReset:{
+            passwordResetToken:undefined,
+            passwordChangedAt:Date.now(),
+            passwordResetExpires:undefined,
+            passwordResetIV:undefined
+        }
+    }, { new: true })
 
     return res.status(200).json({
         status: true,
@@ -258,7 +269,7 @@ const ressetPassword = asyncHandler(async (req, res) => {
             role,
             fullName,
             photoUrl,
-            followers,
+            expoPushToken,
             accessToken,
         }
     })

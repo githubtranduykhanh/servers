@@ -4,7 +4,7 @@ const { default: mongoose, isValidObjectId, Schema } = require('mongoose');
 
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
-
+const { Number } = require('../ultils/helper')
 const UserSchema = new mongoose.Schema({
 	fullName: {
 		type: String,
@@ -29,7 +29,10 @@ const UserSchema = new mongoose.Schema({
 	photoUrl: {
 		type: String,
 	},
-	fcmTokens: {
+	expoPushToken:{
+		type: String,
+	},
+	followedEvents: {
 		type: [String],
 	},
 	following: {
@@ -49,15 +52,20 @@ const UserSchema = new mongoose.Schema({
     refreshToken: {
         type: String,
     },
-    passwordChangedAt: {
-        type: String
-    },
-    passwordResetToken: {
-        type: String
-    },
-    passwordResetExpires: {
-        type: String
-    }
+	passwordReset: {
+		passwordChangedAt: {
+			type: String,
+		},
+		passwordResetToken: {
+			type: String,
+		},
+		passwordResetExpires: {
+			type: String,
+		},
+		passwordResetIV: {
+			type: String,
+		},
+	},
 },{
     timestamps: true
 });
@@ -74,11 +82,10 @@ UserSchema.methods = {
     isCorrectPassword: async function (password) {
         return await bcrypt.compare(password, this.password)
     },
-    createPasswordChangedToken: function () {
-        const resetToken = crypto.randomBytes(32).toString('hex')
-        this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex')
-        this.passwordResetExpires = Date.now() + 15 * 60 * 1000
-        return resetToken
+    createPasswordChangedToken: function (encryptedData,iv) {
+        this.passwordReset.passwordResetToken = encryptedData
+        this.passwordReset.passwordResetExpires = Date.now() + 15 * 60 * 1000 // 15 phút
+		this.passwordReset.passwordResetIV = iv
     }
 }
 

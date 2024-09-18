@@ -144,16 +144,51 @@ const getProfile = asyncHandler(async (req, res) => {
       updatedAt,
       expoPushToken,
       __v,
-      ...UserProfile
+      ...userProfile
     } = user.toObject()
 
     const events = await EventModel.find({authorId:user._id}).select('-__v -createdAt -updatedAt');
-    UserProfile.followedEvents = events
+    userProfile.followedEvents = events
     return res.status(200).json({
       status: true,
       mes: 'Get Profile successfully!',
-      data:UserProfile
+      data:userProfile
     });
+})
+
+
+const putMyProfile = asyncHandler(async (req, res) => {
+  const {_id} = req.user
+  const {photoUrl,familyName,givenName,fullName,bio} = req.body
+  const user = await checkUser(_id)
+  if(!user) return res.status(401).json({
+    status: false,
+    mes: 'Invalid credentials!',
+  })   
+
+  const result = await UserModel.findByIdAndUpdate(user._id,{photoUrl,familyName,givenName,fullName,bio},{new:true})
+  res.status(result ? 200 : 400).json({
+    status: result ? true : false,
+    mes:  result ? `Update my email successfully` : 'Update my email failed',
+  })
+
+})
+
+
+const putMyEmailProfile = asyncHandler(async (req, res) => {
+  const {_id} = req.user
+  const {email} = req.body
+  const user = await checkUser(_id)
+  if(!user) return res.status(401).json({
+    status: false,
+    mes: 'Invalid credentials!',
+  })   
+
+  const result = await UserModel.findByIdAndUpdate(user._id,{email},{new:true})
+  res.status(result ? 200 : 400).json({
+    status: result ? true : false,
+    mes:  result ? `Update my email successfully` : 'Update my email failed',
+  })
 })
 
 module.exports = {
@@ -162,5 +197,7 @@ module.exports = {
     getFollowersUser,
     postExpoPushToken,
     sendInviteNotification,
-    getProfile
+    getProfile,
+    putMyProfile,
+    putMyEmailProfile
 }

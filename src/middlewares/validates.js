@@ -81,12 +81,48 @@ const profileUserConfigsParams = {
     },
 };
 
+const profileEmailUserConfigsBody = {
+    email: {
+        checks: [
+            body('email').isEmail().withMessage('email must be a email'),
+        ]
+    },
+};
 
 
 const expoPushTokenUserConfigsBody = {
     expoPushToken: {
         checks: [
             body('expoPushToken').isString().withMessage('expoPushToken must be a string'),
+        ]
+    },
+};
+
+
+const myProfileUserConfigsBody = {
+    photoUrl: {
+        checks: [
+            body('photoUrl').isString().withMessage('photoUrl must be a string'),
+        ]
+    },
+    familyName: {
+        checks: [
+            body('familyName').isString().withMessage('familyName must be a string'),
+        ]
+    },
+    givenName: {
+        checks: [
+            body('givenName').isString().withMessage('givenName must be a string'),
+        ]
+    },
+    fullName: {
+        checks: [
+            body('fullName').isString().withMessage('fullName must be a string'),
+        ]
+    },
+    bio: {
+        checks: [
+            body('bio').isString().withMessage('bio must be a string'),
         ]
     },
 };
@@ -188,5 +224,7 @@ module.exports = {
     followersEventConfigsParams,
     checkUser,
     expoPushTokenUserConfigsBody,
-    profileUserConfigsParams
+    profileUserConfigsParams,
+    profileEmailUserConfigsBody,
+    myProfileUserConfigsBody
 };

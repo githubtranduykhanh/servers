@@ -185,6 +185,8 @@ const putMyEmailProfile = asyncHandler(async (req, res) => {
   })   
 
   const result = await UserModel.findByIdAndUpdate(user._id,{email},{new:true})
+
+
   res.status(result ? 200 : 400).json({
     status: result ? true : false,
     mes:  result ? `Update my email successfully` : 'Update my email failed',

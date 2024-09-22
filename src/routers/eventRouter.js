@@ -9,6 +9,10 @@ router.post('/add-new',[verifyAccessToken,...validates(addEventConfigsBody)], ev
 router.get('/by-distance',...validates(distanceEventConfigsQuery,'query'), eventController.getEventsByDistance)
 router.get('/', eventController.getEvents)
 
+router.get('/create-categories', eventController.createCategories)
+
+router.get('/categories', eventController.getCategories)
+
 
 
 

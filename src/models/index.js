@@ -2,5 +2,5 @@
 module.exports = {
     UserModel:require('../models/userModel'),
     EventModel:require('../models/eventModel'),
-    CategotyModel:require('../models/categoryModel')
+    CategoryModel:require('../models/categoryModel')
 }

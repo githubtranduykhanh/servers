@@ -99,6 +99,16 @@ const expoPushTokenUserConfigsBody = {
 };
 
 
+const profileInterestUserConfigsBody = {
+    interests: {
+        checks: [
+            body('interests').isArray().withMessage('Interests must be an array'),
+            body('interests.*').isString().withMessage('Each interests must be a string')
+        ]
+    },
+};
+
+
 const myProfileUserConfigsBody = {
     photoUrl: {
         checks: [
@@ -226,5 +236,6 @@ module.exports = {
     expoPushTokenUserConfigsBody,
     profileUserConfigsParams,
     profileEmailUserConfigsBody,
-    myProfileUserConfigsBody
+    myProfileUserConfigsBody,
+    profileInterestUserConfigsBody
 };

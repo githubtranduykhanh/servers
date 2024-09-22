@@ -8,7 +8,7 @@ const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../middlewares/jwt");
-const { EventModel, UserModel } = require("../models");
+const { EventModel, UserModel, CategoryModel } = require("../models");
 const Validate = require("../ultils/validate");
 const { Number } = require("../ultils/helper");
 const sendMail = require("../ultils/sendMail");
@@ -185,8 +185,71 @@ const sendInviteNotification = asyncHandler(async (req, res) => {
   
 })
 
+const createCategories = asyncHandler(async (req, res) => {
+  const categoriesData = [
+    {
+        key: 'sport',
+        title: 'Sports',
+        iconLibrary: 'Ionicons',
+        iconName: 'basketball',
+        iconSize: 22,
+        iconColor: '#EE544A'
+    },
+    {
+        key: 'music',
+        title: 'Music',
+        iconLibrary: 'FontAwesome',
+        iconName: 'music',
+        iconSize: 22,
+        iconColor: '#F59762'
+    },
+    {
+        key: 'food',
+        title: 'Food',
+        iconLibrary: 'CustomSVG', // Thư viện cho icon tùy chỉnh
+        iconName: 'ChefForkSVG',
+        iconSize: 22,
+        iconColor: '#29D697'
+    },
+    {
+        key: 'art',
+        title: 'Art',
+        iconLibrary: 'Ionicons',
+        iconName: 'color-palette-sharp',
+        iconSize: 22,
+        iconColor: '#46CDFB'
+    }
+  ];
+
+
+  for (let categoryData of categoriesData){
+    await CategoryModel.create(categoryData)
+  }
+
+  return res.status(200).json({
+    status: true,
+    mes: 'Create Categories successfully!',
+  });
+
+})
+
+
+const getCategories = asyncHandler(async (req, res) => {
+  const categories = await CategoryModel.find()
+  return res.status(categories ? 200 : 400).json({
+    status: categories ? true : false,
+    mes: categories ? 'Create Categories successfully!' : 'Create Categories failed',
+    data:categories ? categories : []
+  });
+})
+
+
+
+
 module.exports = {
   postAddNewEvent,
   getEventsByDistance,
   getEvents,
+  createCategories,
+  getCategories
 };

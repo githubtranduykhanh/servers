@@ -193,6 +193,28 @@ const putMyEmailProfile = asyncHandler(async (req, res) => {
   })
 })
 
+
+const putMyInterestProfile = asyncHandler(async (req, res) => {
+  const {_id} = req.user
+  const {interests} = req.body
+  const user = await checkUser(_id)
+  if(!user) return res.status(401).json({
+    status: false,
+    mes: 'Invalid credentials!',
+  })   
+
+  const result = await UserModel.findByIdAndUpdate(user._id,{interests},{new:true})
+
+
+  res.status(result ? 200 : 400).json({
+    status: result ? true : false,
+    mes:  result ? `Update my Interest successfully` : 'Update my Interest failed',
+    data:result.interests
+  })
+
+  
+})
+
 module.exports = {
     getAll,
     putFollowers,
@@ -201,5 +223,6 @@ module.exports = {
     sendInviteNotification,
     getProfile,
     putMyProfile,
-    putMyEmailProfile
+    putMyEmailProfile,
+    putMyInterestProfile
 }

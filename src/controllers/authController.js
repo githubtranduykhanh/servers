@@ -136,6 +136,7 @@ const register = asyncHandler(async (req, res) => {
                 photoUrl,
                 expoPushToken,
                 accessToken,
+                refreshToken:newRefreshToken
             }
         })
     }
@@ -188,6 +189,7 @@ const login = asyncHandler(async (req, res) => {
                 photoUrl,
                 expoPushToken,
                 accessToken,
+                refreshToken:newRefreshToken
             }
         })
     } else {
@@ -271,7 +273,33 @@ const ressetPassword = asyncHandler(async (req, res) => {
             photoUrl,
             expoPushToken,
             accessToken,
+            refreshToken:newRefreshToken,
         }
+    })
+})
+
+
+
+const refreshToken = asyncHandler(async (req, res) => {
+   
+    const {refreshToken} = req.body
+    console.log('refreshToken',refreshToken)
+    const refreshTokenData = jwt.verify(refreshToken, process.env.JWT_SECRET)
+    const user = await UserModel.findOne({_id:refreshTokenData._id,refreshToken})
+    if(!user) return res.status(400).json({
+        status: false,
+        mes:'Refresh Token failed'
+    })
+
+
+    const newRefreshToken = generateRefreshToken(user._id)
+
+    await UserModel.findByIdAndUpdate(user._id,{refreshToken:newRefreshToken},{new:true})
+
+    return res.status(200).json({
+        status: true,
+        accessToken:generateAccessToken(user._id,user.role),
+        refreshToken:newRefreshToken
     })
 })
 
@@ -280,5 +308,6 @@ module.exports = {
     register,
     login,
     sendCodeEmail,
-    ressetPassword
+    ressetPassword,
+    refreshToken
 }

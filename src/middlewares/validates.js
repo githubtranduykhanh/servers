@@ -90,6 +90,16 @@ const profileEmailUserConfigsBody = {
 };
 
 
+const refreshTokenAuthConfigsBody = {
+    refreshToken: {
+        checks: [
+            body('refreshToken').isString().withMessage('refreshToken must be a string'),
+        ]
+    },
+};
+
+
+
 const expoPushTokenUserConfigsBody = {
     expoPushToken: {
         checks: [
@@ -237,5 +247,6 @@ module.exports = {
     profileUserConfigsParams,
     profileEmailUserConfigsBody,
     myProfileUserConfigsBody,
-    profileInterestUserConfigsBody
+    profileInterestUserConfigsBody,
+    refreshTokenAuthConfigsBody
 };

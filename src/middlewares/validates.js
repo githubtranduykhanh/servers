@@ -109,6 +109,15 @@ const expoPushTokenUserConfigsBody = {
 };
 
 
+const postFollowUserConfigsBody = {
+    idFollow: {
+        checks: [
+            body('idFollow').isString().withMessage('idFollow must be a string'),
+        ]
+    },
+};
+
+
 const profileInterestUserConfigsBody = {
     interests: {
         checks: [
@@ -248,5 +257,6 @@ module.exports = {
     profileEmailUserConfigsBody,
     myProfileUserConfigsBody,
     profileInterestUserConfigsBody,
-    refreshTokenAuthConfigsBody
+    refreshTokenAuthConfigsBody,
+    postFollowUserConfigsBody
 };

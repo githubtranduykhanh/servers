@@ -203,6 +203,7 @@ const putMyInterestProfile = asyncHandler(async (req, res) => {
     mes: 'Invalid credentials!',
   })   
 
+
   const result = await UserModel.findByIdAndUpdate(user._id,{interests},{new:true})
 
 
@@ -215,6 +216,74 @@ const putMyInterestProfile = asyncHandler(async (req, res) => {
   
 })
 
+
+
+const postFollow = asyncHandler(async (req, res) => {
+  const {_id} = req.user
+  const {idFollow} = req.body
+
+  const [followUser, followingUser] = await Promise.all([
+    UserModel.findByIdAndUpdate(
+      idFollow,
+      { $addToSet: { followers: _id } }, // Sử dụng $addToSet để tránh thêm trùng lặp
+      { new: true }
+    ),
+    UserModel.findByIdAndUpdate(
+      _id,
+      { $addToSet: { following: idFollow } }, // Sử dụng $addToSet để tránh thêm trùng lặp
+      { new: true }
+    )
+  ]);
+
+  // Kiểm tra xem cả hai thao tác cập nhật có thành công không
+  if (followUser && followingUser) {
+    return res.status(200).json({
+      status: true,
+      mes: 'Post Follow successfully',
+      data:followUser.followers
+    });
+  } else {
+    return res.status(400).json({
+      status: false,
+      mes: 'Post Follow failed',
+    });
+  }
+})
+
+
+const postUnFollow = asyncHandler(async (req, res) => {
+  const {_id} = req.user
+  const {idFollow} = req.body
+
+  const [followUser, followingUser] = await Promise.all([
+    UserModel.findByIdAndUpdate(
+      idFollow,
+      { $pull: { followers: _id } }, // Sử dụng $addToSet để tránh thêm trùng lặp
+      { new: true }
+    ),
+    UserModel.findByIdAndUpdate(
+      _id,
+      { $pull: { following: idFollow } }, // Sử dụng $addToSet để tránh thêm trùng lặp
+      { new: true }
+    )
+  ]);
+
+  // Kiểm tra xem cả hai thao tác cập nhật có thành công không
+  if (followUser && followingUser) {
+    return res.status(200).json({
+      status: true,
+      mes: 'Post Follow successfully',
+      data:followUser.followers
+    });
+  } else {
+    return res.status(400).json({
+      status: false,
+      mes: 'Post Follow failed',
+    });
+  }
+})
+
+
 module.exports = {
     getAll,
     putFollowers,
@@ -224,5 +293,7 @@ module.exports = {
     getProfile,
     putMyProfile,
     putMyEmailProfile,
-    putMyInterestProfile
+    putMyInterestProfile,
+    postFollow,
+    postUnFollow
 }

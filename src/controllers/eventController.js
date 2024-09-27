@@ -14,7 +14,7 @@ const { Number } = require("../ultils/helper");
 const sendMail = require("../ultils/sendMail");
 const calculateDistance = require("../ultils/distanceUtils");
 const buildQuery = require("../ultils/buildQuery");
-const {checkUser} = require('../middlewares/validates')
+const { checkUser } = require('../middlewares/validates')
 
 const sendPushNotification = require('../ultils/notification')
 
@@ -119,46 +119,76 @@ const eventFilters = (formateQueries, queryObj) => {
 };
 
 const getEvents = asyncHandler(async (req, res) => {
-    console.log(req.query)
-    const { lat, lng, distance, ...query } = req.query;
-    const result = await buildQuery(EventModel,{...query},eventFilters)
-    // Return response
-    if(lat && lng && distance){
-        result.data = result.data.filter((event) => {
-            const eventLat = event.position.lat;
-            const eventLng = event.position.lng;
-        
-            const eventDistance = calculateDistance(lat, lng, eventLat, eventLng);
-            return eventDistance <= distance; // Chỉ giữ các sự kiện trong khoảng cách
-        });
-    }
-    
-    res.status(result ? 200 : 404).json({
-        status: result ? true : false,
-        mes: result ? `Get events successfully` : `Cannot get events`,
-       ...result
-    })
+  console.log(req.query)
+  const { lat, lng, distance, author, ...query } = req.query;
+  const result = await buildQuery(EventModel, { ...query }, eventFilters)
+
+  if (author) {
+    const updatedEvents = await Promise.all(result.data.map(async (event) => {
+      // Ensure event is a plain JavaScript object
+      event = event.toObject(); // Convert Mongoose document to plain object
+
+      // Fetch the author details excluding sensitive fields
+      const author = await UserModel.findById(event.authorId)
+        .select('-password -refreshToken -passwordReset')
+        .exec();
+
+      // If author is found, assign it to event.author
+      if (author) {
+        event.author = author; // Assign the author object to event
+        // delete event.authorId;  // Remove authorId
+        return event;           // Return event with author
+      }
+      // If no author is found, return null to filter out later
+      return null;
+    }));
+    // Filter out events that have no author (null events)
+    const filteredEvents = updatedEvents.filter(event => event !== null);
+    result.data = filteredEvents;
+  }
+
+
+
+  // Return response
+  if (lat && lng && distance) {
+    result.data = result.data.filter((event) => {
+      const eventLat = event.position.lat;
+      const eventLng = event.position.lng;
+
+      const eventDistance = calculateDistance(lat, lng, eventLat, eventLng);
+      return eventDistance <= distance; // Chỉ giữ các sự kiện trong khoảng cách
+    });
+  }
+
+
+
+
+  res.status(result ? 200 : 404).json({
+    status: result ? true : false,
+    mes: result ? `Get events successfully` : `Cannot get events`,
+    ...result
+  })
 });
 
 
 
 const getFollowersUser = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const events = await EventModel.find({ followers: _id }).select('_id').exec(); 
+  const events = await EventModel.find({ followers: _id }).select('_id').exec();
   const eventIds = events.map(event => event._id.toString());
   res.status(eventIds ? 200 : 400).json({
     status: eventIds ? true : false,
-    mes:  eventIds ? `Get Followers User successfully` : 'Get Followers User failed',
+    mes: eventIds ? `Get Followers User successfully` : 'Get Followers User failed',
     data: eventIds
   })
 })
 
 
 const sendInviteNotification = asyncHandler(async (req, res) => {
-  const {userIds, messageTitle, messageBody } = req.body
+  const { userIds, messageTitle, messageBody } = req.body
 
   const users = await UserModel.find({ _id: { $in: userIds } });
-  
+
   if (users.length === 0) {
     return res.status(404).json({
       status: false,
@@ -182,47 +212,47 @@ const sendInviteNotification = asyncHandler(async (req, res) => {
     status: true,
     mes: 'Notifications sent successfully!',
   });
-  
+
 })
 
 const createCategories = asyncHandler(async (req, res) => {
   const categoriesData = [
     {
-        key: 'sport',
-        title: 'Sports',
-        iconLibrary: 'Ionicons',
-        iconName: 'basketball',
-        iconSize: 22,
-        iconColor: '#EE544A'
+      key: 'sport',
+      title: 'Sports',
+      iconLibrary: 'Ionicons',
+      iconName: 'basketball',
+      iconSize: 22,
+      iconColor: '#EE544A'
     },
     {
-        key: 'music',
-        title: 'Music',
-        iconLibrary: 'FontAwesome',
-        iconName: 'music',
-        iconSize: 22,
-        iconColor: '#F59762'
+      key: 'music',
+      title: 'Music',
+      iconLibrary: 'FontAwesome',
+      iconName: 'music',
+      iconSize: 22,
+      iconColor: '#F59762'
     },
     {
-        key: 'food',
-        title: 'Food',
-        iconLibrary: 'CustomSVG', // Thư viện cho icon tùy chỉnh
-        iconName: 'ChefForkSVG',
-        iconSize: 22,
-        iconColor: '#29D697'
+      key: 'food',
+      title: 'Food',
+      iconLibrary: 'CustomSVG', // Thư viện cho icon tùy chỉnh
+      iconName: 'ChefForkSVG',
+      iconSize: 22,
+      iconColor: '#29D697'
     },
     {
-        key: 'art',
-        title: 'Art',
-        iconLibrary: 'Ionicons',
-        iconName: 'color-palette-sharp',
-        iconSize: 22,
-        iconColor: '#46CDFB'
+      key: 'art',
+      title: 'Art',
+      iconLibrary: 'Ionicons',
+      iconName: 'color-palette-sharp',
+      iconSize: 22,
+      iconColor: '#46CDFB'
     }
   ];
 
 
-  for (let categoryData of categoriesData){
+  for (let categoryData of categoriesData) {
     await CategoryModel.create(categoryData)
   }
 
@@ -239,7 +269,7 @@ const getCategories = asyncHandler(async (req, res) => {
   return res.status(categories ? 200 : 400).json({
     status: categories ? true : false,
     mes: categories ? 'Create Categories successfully!' : 'Create Categories failed',
-    data:categories ? categories : []
+    data: categories ? categories : []
   });
 })
 

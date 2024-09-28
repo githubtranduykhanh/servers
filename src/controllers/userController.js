@@ -63,13 +63,17 @@ const putFollowers = asyncHandler(async (req, res) => {
 })
 
 
-const getFollowersUser = asyncHandler(async (req, res) => {
+const getDataDefaultUser = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     const userFind = await UserModel.findById(_id)
     res.status(userFind ? 200 : 400).json({
       status: userFind ? true : false,
-      mes:  userFind ? `Get Followers User successfully` : 'Get Followers User failed',
-      data: userFind.followedEvents
+      mes:  userFind ? `Get Data Default User successfully` : 'Get Data Default User failed',
+      data: userFind ? {
+        followedEvents : userFind.followedEvents,
+        followers : userFind.followers,
+        following : userFind.following
+      } : undefined
     })
 })
 
@@ -240,7 +244,10 @@ const postFollow = asyncHandler(async (req, res) => {
     return res.status(200).json({
       status: true,
       mes: 'Post Follow successfully',
-      data:followUser.followers
+      data:{
+        followUser:followUser.followers,
+        myFollowingUser:followingUser.following
+      }
     });
   } else {
     return res.status(400).json({
@@ -273,7 +280,10 @@ const postUnFollow = asyncHandler(async (req, res) => {
     return res.status(200).json({
       status: true,
       mes: 'Post Follow successfully',
-      data:followUser.followers
+      data:{
+        followUser:followUser.followers,
+        myFollowingUser:followingUser.following
+      }
     });
   } else {
     return res.status(400).json({
@@ -287,7 +297,7 @@ const postUnFollow = asyncHandler(async (req, res) => {
 module.exports = {
     getAll,
     putFollowers,
-    getFollowersUser,
+    getDataDefaultUser,
     postExpoPushToken,
     sendInviteNotification,
     getProfile,

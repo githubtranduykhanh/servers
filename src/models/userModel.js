@@ -44,6 +44,11 @@ const UserSchema = new mongoose.Schema({
 	interests: {
 		type: [String],
 	},
+	type: {
+		type: String,
+		enum: ['Organizer', 'Individual'], 
+		default: 'Individual', 
+	},
     role: {
         type: Number,
         enum:[2101,2001],

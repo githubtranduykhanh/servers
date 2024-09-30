@@ -9,4 +9,16 @@ const roles = [
     }
 ]
 
-module.exports = {roles}
+
+const selectUser = [
+    '-passwordReset',
+    '-refreshToken',
+    '-role',
+    '-password',
+    '-createdAt',
+    '-updatedAt',
+    '-expoPushToken',
+    '-__v'
+]
+
+module.exports = {roles,selectUser}

@@ -10,6 +10,7 @@ const Validate = require('../ultils/validate')
 const { Number } = require('../ultils/helper')
 const sendMail = require('../ultils/sendMail')
 const {checkUser} = require('../middlewares/validates')
+const {selectUser} = require('../ultils/constant')
 
 const sendPushNotification = require('../ultils/notification')
 
@@ -294,6 +295,39 @@ const postUnFollow = asyncHandler(async (req, res) => {
 })
 
 
+const getFriend = asyncHandler(async (req, res) => {
+  const {_id} = req.user
+  const user = await checkUser(_id)
+  if(!user) return res.status(401).json({
+    status: false,
+    mes: 'Invalid credentials!',
+  }) 
+
+  console.log(user.following)
+
+  console.log('selectUser',selectUser.join(' '))
+  const friends = await Promise.all(user.following.map( async (friend) => {
+    const user = await UserModel.findById(friend).select(selectUser.join(' ')).exec()
+    return user ? user : null
+  }))
+
+
+  const filteredFriends = friends.filter(event => event !== null);
+
+
+  console.log(filteredFriends)
+
+  return res.status(200).json({
+    status: true,
+    mes: 'Get Friend successfully',
+    data:filteredFriends
+  });
+
+})
+
+
+
+
 module.exports = {
     getAll,
     putFollowers,
@@ -305,5 +339,6 @@ module.exports = {
     putMyEmailProfile,
     putMyInterestProfile,
     postFollow,
-    postUnFollow
+    postUnFollow,
+    getFriend
 }

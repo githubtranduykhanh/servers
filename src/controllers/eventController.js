@@ -65,13 +65,32 @@ const getEventsByDistance = asyncHandler(async (req, res) => {
   const { lat, lng, distance } = req.query;
   const events = await EventModel.find();
 
-  const filteredEvents = events.filter((event) => {
+
+
+  const filteredDistanceEvents = events.filter((event) => {
     const eventLat = event.position.lat;
     const eventLng = event.position.lng;
 
     const eventDistance = calculateDistance(lat, lng, eventLat, eventLng);
     return eventDistance <= distance; // Chỉ giữ các sự kiện trong khoảng cách
   });
+
+
+  const updatedEvents = await Promise.all(filteredDistanceEvents.map(async (event) => {
+    event = event.toObject()
+    const author = await UserModel.findById(event.authorId).select('-password -refreshToken -passwordReset')
+    .exec();
+    
+    if(author){
+      event.author = author
+      return event
+    }
+    return null
+  }))
+
+
+  const filteredEvents = updatedEvents.filter(event => event !== null);
+
 
   return res.status(filteredEvents ? 200 : 400).json({
     status: filteredEvents ? true : false,

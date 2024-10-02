@@ -90,6 +90,31 @@ const profileEmailUserConfigsBody = {
 };
 
 
+const sendInviteNotificationConfigsBody = {
+    messageTitle: {
+        checks: [
+            body('messageTitle').isString().withMessage('messageTitle must be a string'),
+        ]
+    },
+    messageBody: {
+        checks: [
+            body('messageBody').isString().withMessage('messageBody must be a string'),
+        ]
+    },
+    idUsers: {
+        checks: [
+            body('idUsers').isArray().withMessage('idUsers must be an array'),
+            body('idUsers.*').isString().withMessage('Each idUsers must be a string')
+        ]
+    },
+    idEvent: {
+        checks: [
+            body('idEvent').isString().withMessage('idEvent must be a string'),
+        ]
+    },
+};
+
+
 const refreshTokenAuthConfigsBody = {
     refreshToken: {
         checks: [
@@ -258,5 +283,6 @@ module.exports = {
     myProfileUserConfigsBody,
     profileInterestUserConfigsBody,
     refreshTokenAuthConfigsBody,
-    postFollowUserConfigsBody
+    postFollowUserConfigsBody,
+    sendInviteNotificationConfigsBody
 };

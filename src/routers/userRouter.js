@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const userController = require('../controllers/userController')
 const { verifyAccessToken,checkUserDatabase } = require('../middlewares/verifyToken')
-const {validates,followersEventConfigsParams,postFollowUserConfigsBody,myProfileUserConfigsBody,profileInterestUserConfigsBody,profileEmailUserConfigsBody,expoPushTokenUserConfigsBody,profileUserConfigsParams} = require('../middlewares/validates')
+const {validates,followersEventConfigsParams,postFollowUserConfigsBody,sendInviteNotificationConfigsBody,myProfileUserConfigsBody,profileInterestUserConfigsBody,profileEmailUserConfigsBody,expoPushTokenUserConfigsBody,profileUserConfigsParams} = require('../middlewares/validates')
 
 
 
@@ -16,4 +16,5 @@ router.put('/followers/:idEvent', [verifyAccessToken,...validates(followersEvent
 router.put('/profile-email', [verifyAccessToken,...validates(profileEmailUserConfigsBody)] ,userController.putMyEmailProfile)
 router.put('/my-profile', [verifyAccessToken,...validates(myProfileUserConfigsBody)] ,userController.putMyProfile)
 router.put('/profile-interest', [verifyAccessToken,...validates(profileInterestUserConfigsBody)] ,userController.putMyInterestProfile)
+router.post('/send-invite-notification', [verifyAccessToken,checkUserDatabase,...validates(sendInviteNotificationConfigsBody)] ,userController.sendInviteNotification)
 module.exports = router

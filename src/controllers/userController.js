@@ -12,6 +12,7 @@ const sendMail = require('../ultils/sendMail')
 const {checkUser} = require('../middlewares/validates')
 const {selectUser} = require('../ultils/constant')
 
+
 const sendPushNotification = require('../ultils/notification')
 
 const getAll = asyncHandler(async (req,res) => {
@@ -94,27 +95,52 @@ const postExpoPushToken =  asyncHandler(async (req, res) => {
 
 
 const sendInviteNotification = asyncHandler(async (req, res) => {
-  const { _id } = req.user 
-  const { messageTitle, messageBody } = req.body
-  const user = await checkUser(_id)
-  if(!user) return res.status(401).json({
-    status: false,
-    mes: 'Invalid credentials!',
-  })  
-
-  const users = await UserModel.find({ _id: { $in: user.followedEvents } });
+  const { messageTitle, messageBody, idUsers, idEvent  } = req.body
   
 
-  if (users.length === 0) {
+  const users = await UserModel.find({ _id: { $in: idUsers } });
+  const event = await EventModel.findById(idEvent)
+
+  if (users.length === 0 || !event) {
     return res.status(404).json({
       status: false,
-      mes: 'No users found!',
+      mes: 'No users or event found!',
     });
   }
 
   const notificationPromises = users.map(user => {
     if (user.expoPushToken) {
-      return sendPushNotification(user.expoPushToken, messageTitle, messageBody);
+      return sendPushNotification(
+          user.expoPushToken,
+          messageTitle,
+          messageBody,
+          {idEvent}
+        );
+    }
+    else if(user.email){
+      const html = `<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+        <table align="center" style="background-color: #5669FF;border-radius:8px;padding:20px;max-width:600px;margin:auto">
+            <tr>
+            <td>
+                <h1 style="color: #ffffff; text-align: center;">Invite Notification</h1>
+                <h2 style="color: #ffffff; text-align: center;">Hello,</h2>
+                <p style="color: #ffffff; text-align: center;">We have received your request. Below are the random numbers generated:</p>
+                
+                <!-- Bảng chứa các ô số -->
+                <table align="center" style="margin: 20px auto; border-spacing: 10px;">
+                <tr>
+                    ${idEvent}
+                </tr>
+                </table>
+                
+                <h4 style="color: #ffffff; text-align: center;">Thank you for using our service!</h4>
+                <h4 style="color: #ffffff; text-align: center;">Best regards,</h4>
+                <h4 style="color: #ffffff; text-align: center;">Support team</h4>
+            </td>
+            </tr>
+        </table>
+    </body>`
+      return sendMail(user.email,html,'Invite Notification')
     }
     return null;
   });

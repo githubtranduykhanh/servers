@@ -16,7 +16,8 @@ const calculateDistance = require("../ultils/distanceUtils");
 const buildQuery = require("../ultils/buildQuery");
 const { checkUser } = require('../middlewares/validates')
 
-const sendPushNotification = require('../ultils/notification')
+const sendPushNotification = require('../ultils/notification');
+const { selectUser } = require("../ultils/constant");
 
 const postAddNewEvent = asyncHandler(async (req, res) => {
   const { user } = req;
@@ -293,6 +294,31 @@ const getCategories = asyncHandler(async (req, res) => {
 })
 
 
+const getEventById = asyncHandler(async (req, res) => {
+  const{id} = req.params
+  console.log('id',id)
+  let event = await EventModel.findById(id)
+  if(!event)  return res.status(400).json({
+    status: false,
+    mes: 'Get Event By Id  failed event',
+  });
+
+  const user = await UserModel.findById(event.authorId).select(selectUser.join(' ')).exec()
+  if(!user)  return res.status(400).json({
+    status: false,
+    mes: 'Get Event By Id  failed author',
+  });
+
+  event = event.toObject()
+  event.author = user
+  console.log('event',event)
+  return res.status(event ? 200 : 400).json({
+    status: event ? true : false,
+    mes: event ? 'Get Event By Id successfully!' : 'Get Event By Id  failed',
+    data: event ? event : {}
+  });
+})
+
 
 
 module.exports = {
@@ -300,5 +326,6 @@ module.exports = {
   getEventsByDistance,
   getEvents,
   createCategories,
-  getCategories
+  getCategories,
+  getEventById
 };

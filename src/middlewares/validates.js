@@ -81,6 +81,15 @@ const profileUserConfigsParams = {
     },
 };
 
+
+const eventByIdConfigsParams = {
+    id: {
+        checks: [
+            param('id').isString().withMessage('id must be a string'),
+        ]
+    },
+};
+
 const profileEmailUserConfigsBody = {
     email: {
         checks: [
@@ -284,5 +293,6 @@ module.exports = {
     profileInterestUserConfigsBody,
     refreshTokenAuthConfigsBody,
     postFollowUserConfigsBody,
-    sendInviteNotificationConfigsBody
+    sendInviteNotificationConfigsBody,
+    eventByIdConfigsParams
 };

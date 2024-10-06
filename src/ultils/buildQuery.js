@@ -1,58 +1,88 @@
-const asyncHandler = require('express-async-handler')
+const asyncHandler = require("express-async-handler");
 require("dotenv").config();
+const calculateDistance = require("../ultils/distanceUtils");
 const buildQuery = asyncHandler(async (Model, query, customFilters) => {
+  // 1A) Basic Filtering
+  const queryObj = { ...query };
+  const excludedFields = ["page", "sort", "limit", "fields",'lat',"lng","distance"];
+  excludedFields.forEach((el) => delete queryObj[el]);
+
+  // 1B) Advanced filtering (gte, lte, gt, lt)
+  let queryString = JSON.stringify(queryObj);
+  queryString = queryString.replace(
+    /\b(gte|gt|lte|lt)\b/g,
+    (match) => `$${match}`
+  );
+  let formateQueries = JSON.parse(queryString);
+
+  // 2) Apply custom filters
+  if (typeof customFilters === "function") {
+    formateQueries = customFilters(formateQueries, queryObj);
+  }
+  
+
+
+  // Build the query
+  let queryCommand = Model.find(formateQueries);
+
+  // 3) Sorting
+  if (query.sort) {
+    const sortBy = query.sort.split(",").join(" ");
+    queryCommand = queryCommand.sort(sortBy);
+  }
+
+  // 4) Field limiting
+  if (query.fields) {
+    const fieldsBy = query.fields.split(",").join(" ");
+    queryCommand = queryCommand.select(fieldsBy);
+  }
+  // Distance filtering
+  let filteredEvents = [];
+  
+  if (query.lat && query.lng && query.distance) {
+    const lat = +query.lat;
+    const lng = +query.lng;
+    const distance = +query.distance; 
+
+    
+    const allEvents = await queryCommand.clone(); // Clone the command to fetch all events
    
-        // 1A) Basic Filtering
-        const queryObj = { ...query }
-        const excludedFields = ['page', 'sort', 'limit', 'fields']
-        excludedFields.forEach(el => delete queryObj[el])
-
-        // 1B) Advanced filtering (gte, lte, gt, lt)
-        let queryString = JSON.stringify(queryObj)
-        queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`)
-        let formateQueries = JSON.parse(queryString)
-
-        // 2) Apply custom filters
-        if (typeof customFilters === 'function') {
-            formateQueries = customFilters(formateQueries, queryObj)
-        }
-
-        // Build the query
-        let queryCommand = Model.find(formateQueries)
-
-        // 3) Sorting
-        if (query.sort) {
-            const sortBy = query.sort.split(',').join(' ')
-            queryCommand = queryCommand.sort(sortBy)
-        }
-
-        // 4) Field limiting
-        if (query.fields) {
-            const fieldsBy = query.fields.split(',').join(' ')
-            queryCommand = queryCommand.select(fieldsBy)
-        }
-
-        // 5) Pagination
-        const page = +query.page || 1
-        const limit = +query.limit || process.env.LIMIT_DEFAULT
-        const skip = (page - 1) * limit
-        queryCommand.limit(limit).skip(skip)
+    filteredEvents = allEvents.filter((event) => {
+      if (event.position && event.position.lat && event.position.lng) {
+        const eventLat = event.position.lat;
+        const eventLng = event.position.lng;
+        const eventDistance = calculateDistance(lat, lng, eventLat, eventLng);
+        return eventDistance <= distance; 
+      }
+      return false; 
+    });
 
 
+    const page = +query.page || 1;
+    const limit = +query.limit || process.env.LIMIT_DEFAULT;
+    const skip = (page - 1) * limit;
+    const paginatedEvents = filteredEvents.slice(skip, skip + (+query.limit || process.env.LIMIT_DEFAULT));
+    
+    return {
+      counts: filteredEvents.length,
+      data: paginatedEvents,
+    };
+  }
 
-        // Execute query
-        const response = await queryCommand
-        const counts = await Model.find(formateQueries).countDocuments()
+  
+  const page = +query.page || 1;
+  const limit = +query.limit || process.env.LIMIT_DEFAULT;
+  const skip = (page - 1) * limit;
+  queryCommand.limit(limit).skip(skip);
 
+  
+  const response = await queryCommand;
 
-
-        return {
-            counts,
-            data: response ? response : [],
-        }
-        
-})
-
+  return {
+    counts: await Model.countDocuments(formateQueries), 
+    data: response ? response : [],
+  };
+});
 
 /* 
     Lọc theo tiêu đề (title) 
@@ -111,4 +141,4 @@ const buildQuery = asyncHandler(async (Model, query, customFilters) => {
 
 */
 
-module.exports = buildQuery
+module.exports = buildQuery;

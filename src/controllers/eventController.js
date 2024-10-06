@@ -140,36 +140,34 @@ const eventFilters = (formateQueries, queryObj) => {
 
 const getEvents = asyncHandler(async (req, res) => {
   console.log(req.query)
-  const { lat, lng, distance, author, ...query } = req.query;
+  const { author, ...query } = req.query;
   const result = await buildQuery(EventModel, { ...query }, eventFilters)
 
   if (author) {
     const updatedEvents = await Promise.all(result.data.map(async (event) => {
-      // Ensure event is a plain JavaScript object
-      event = event.toObject(); // Convert Mongoose document to plain object
-
-      // Fetch the author details excluding sensitive fields
+     
+      event = event.toObject(); 
+     
       const author = await UserModel.findById(event.authorId)
         .select('-password -refreshToken -passwordReset')
         .exec();
 
-      // If author is found, assign it to event.author
+      
       if (author) {
-        event.author = author; // Assign the author object to event
-        // delete event.authorId;  // Remove authorId
-        return event;           // Return event with author
+        event.author = author; 
+        return event;         
       }
-      // If no author is found, return null to filter out later
+    
       return null;
     }));
-    // Filter out events that have no author (null events)
+ 
     const filteredEvents = updatedEvents.filter(event => event !== null);
     result.data = filteredEvents;
   }
 
 
 
-  // Return response
+  /* // Return response
   if (lat && lng && distance) {
     result.data = result.data.filter((event) => {
       const eventLat = event.position.lat;
@@ -178,7 +176,7 @@ const getEvents = asyncHandler(async (req, res) => {
       const eventDistance = calculateDistance(lat, lng, eventLat, eventLng);
       return eventDistance <= distance; // Chỉ giữ các sự kiện trong khoảng cách
     });
-  }
+  } */
 
 
 
